@@ -3,9 +3,14 @@ import glob, os
 import numpy as np
 from ROOT import *
 
+# Sklearn imports
 from sklearn.preprocessing import MinMaxScaler
 
-#Define this somewhere else?
+# Keras imports
+from keras.utils import np_utils
+
+
+# Define this somewhere else?
 btagthresh = 0.77
 
 
@@ -37,23 +42,26 @@ def Generator():
         chain.SetBranchStatus("met_*", 1)
         
     
-        print fold
+        #print fold
         for file in os.listdir("../data/" + fold):
             chain.Add("../data/" + fold + "/" + file)    
-            print "adding " + file
+        #    print "adding " + file
         chainlist.append(chain)
 
 
-    nsec = 10  
+	runevents = chainlist[0].GetEntries()
+	print "Events: " + str(runevents)	
+
+    nsec = 100  
     while True:
-        for i in range(3): # 3 is just a test value for now
+        for i in range(runevents/nsec): # 3 is just a test value for now
                     
             dset = []
             for t in chainlist:
                 #print chainlist.index(t)
                 for j in range(nsec):
                         t.GetEntry(i*nsec + j)
-   	                    #print "Entry no: " + str(i*nsec + j)
+                           #print "Entry no: " + str(i*nsec + j)
 
                         # Assumes one lepton in final state
                         if (t.el_e.size() != 0):
@@ -95,7 +103,8 @@ def Generator():
             scaler = MinMaxScaler(feature_range=(0, 1))
             reX = scaler.fit_transform(X)
     
-            yield reX, Y
+            reY = np_utils.to_categorical(Y)
+            yield [reX, reX], reY
 
 
     
