@@ -1,8 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env/ python 
 
-
-from ROOT import *
-from generator import Generator
 
 
 # Keras includes
@@ -12,8 +9,8 @@ from keras.layers import Dense, Merge
 
 
 
-def main():
-    
+def seq_layer():
+
     model = Sequential()
 
     lh = Sequential()
@@ -41,14 +38,4 @@ def main():
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-
-
-    
-    gen = Generator()
-
-    model.fit_generator(gen, samples_per_epoch = 80000, nb_epoch = 5 )    
-
-
-
-if __name__ == '__main__':
-    main()
+    return model
