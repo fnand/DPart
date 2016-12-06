@@ -9,6 +9,8 @@ from sklearn.preprocessing import MinMaxScaler
 # Keras imports
 from keras.utils import np_utils
 
+# Local imports
+from folder_finder import folder_finder
 
 # Define this somewhere else?
 btagthresh = 0.77
@@ -24,13 +26,15 @@ def Generator():
     #That will be automatically created 
 
 
-    sigfolder = "user.fschenck.303345.MadGraphPythia8EvtGen.DAOD_EXOT4.e4352_s2608_r7772_r7676_p2666.16-09-19_output.root/"
-    ttbarfolder = "user.fschenck.410000.PowhegPythiaEvtGen.DAOD_EXOT4.e3698_s2608_s2183_r7725_r7676_p2719.16-09-09-v2_output.root/"
-    sgtopfolder = "user.fschenck.410011.PowhegPythiaEvtGen.DAOD_EXOT4.e3824_s2608_s2183_r7725_r7676_p2719.16-09-09-v2_output.root/"
-    wjetsfolder = "user.fschenck.363436.Sherpa.DAOD_EXOT4.e4715_s2726_r7725_r7676_p2708.16-09-09-v2_output.root/"
+    #sigfolder = "user.fschenck.303345.MadGraphPythia8EvtGen.DAOD_EXOT4.e4352_s2608_r7772_r7676_p2666.16-09-19_output.root/"
+    #ttbarfolder = "user.fschenck.410000.PowhegPythiaEvtGen.DAOD_EXOT4.e3698_s2608_s2183_r7725_r7676_p2719.16-09-09-v2_output.root/"
+    #sgtopfolder = "user.fschenck.410011.PowhegPythiaEvtGen.DAOD_EXOT4.e3824_s2608_s2183_r7725_r7676_p2719.16-09-09-v2_output.root/"
+    #wjetsfolder = "user.fschenck.363436.Sherpa.DAOD_EXOT4.e4715_s2726_r7725_r7676_p2708.16-09-09-v2_output.root/"
 
 
-    folderlist = [sigfolder, ttbarfolder, sgtopfolder, wjetsfolder] 
+    folderlist = folder_finder() 
+    #print folderlist
+
 
     chainlist = []
     for fold in folderlist:
@@ -43,25 +47,52 @@ def Generator():
         
     
         #print fold
-        for file in os.listdir("../data/" + fold):
-            chain.Add("../data/" + fold + "/" + file)    
+        for folder in fold:
+            for file in os.listdir("../data/" + folder):
+                chain.Add("../data/" + folder + "/" + file)    
         #    print "adding " + file
         chainlist.append(chain)
+        #print chain.GetEntries()
+
+    maxEntries =  max( chainlist, key=lambda _ : _.GetEntries() ).GetEntries()
+
+    # This is to make sure that all cases have similar amounts of entries
+    # This next bit adds files to smaller chain until they have at least 
+    # the same amount of entries as the largest chain. 
+    # I can think of more sophisticated ways, but this should do for now
+
+    for t in chainlist:
+
+        ents = t.GetEntries()
+        curr_ents = ents
+
+        while curr_ents < maxEntries:
+            curr_ents += ents
+            fold = folderlist[chainlist.index(t)] 
+            for folder in fold:
+                for file in os.listdir("../data/" + folder):
+                    t.Add("../data/" + folder + "/" + file)
 
 
-	runevents = chainlist[0].GetEntries()
-	print "Events: " + str(runevents)	
 
-    nsec = 100  
+
+    for t in chainlist:
+        print "Chain: " + str(chainlist.index(t))
+        print t.GetEntries()
+    #runevents = chainlist[0].GetEntries()
+    #print "Events: " + str(runevents)    
+
+    nsec = 250  
     while True:
-        for i in range(runevents/nsec): # 3 is just a test value for now
+        for i in range(maxEntries/nsec): # 3 is just a test value for now
                     
             dset = []
             for t in chainlist:
-                #print chainlist.index(t)
+                
+                #print "Chain :" + str( chainlist.index(t))
                 for j in range(nsec):
                         t.GetEntry(i*nsec + j)
-                           #print "Entry no: " + str(i*nsec + j)
+                        #print "Entry no: " + str(i*nsec + j)
 
                         # Assumes one lepton in final state
                         if (t.el_e.size() != 0):
@@ -96,6 +127,9 @@ def Generator():
 
             #now add training labels
             dset = np.array(dset).reshape(len(dset)/19, 19)
+
+            #print "Size in MegaBytes: "
+            #print dset.nbytes/1e6
 
             X = dset[:,:18]
             Y = dset[:,18]

@@ -28,14 +28,14 @@ def seq_layer():
     model.add(Dense(100, init='uniform', activation='relu'))
 
     #model.add(Dense(72, init='uniform', activation='relu'))
-        #model.add(Dense(72, init='uniform', activation='softmax'))
-        #model.add(Dense(72, init='uniform', activation='relu'))
+    #model.add(Dense(72, init='uniform', activation='softmax'))
+    #model.add(Dense(72, init='uniform', activation='relu'))
 
 
     model.add(Dense(4, init='normal', activation= 'softmax')) #'softmax')) #'sigmoid'
 
     #sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
 
     return model

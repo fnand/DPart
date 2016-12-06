@@ -16,7 +16,7 @@ def main():
     model = seq_layer()
     gen = Generator()
 
-    model.fit_generator(gen, samples_per_epoch = 80000, nb_epoch = 5 )    
+    model.fit_generator(gen, samples_per_epoch = 1000000, nb_epoch = 10)#14000000, nb_epoch = 10 )    
 
 
 	# serialize model to JSON
